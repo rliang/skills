@@ -1,0 +1,10 @@
+{
+  "name": "animated-explainer",
+  "description": "Explain a concept, a document or the previous reply as one offline HTML deck of hand-drawn, step-through animations written in code with Canvas Commons.",
+  "version": "0.1.0",
+  "author": {"name": "rliang", "url": "https://github.com/rliang"},
+  "repository": "https://github.com/rliang/skills",
+  "license": "MIT",
+  "keywords": ["explainer", "animation", "canvas-commons", "motion-canvas", "deck", "offline-html"],
+  "skills": ["./"]
+}

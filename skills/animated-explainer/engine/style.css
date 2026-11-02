@@ -1,0 +1,97 @@
+:root { --ink: #1e1e1e; --muted: #6b6b6b; --line: #e3e3e3; --bg: #fdfcf9; --code: #f1efe9; --surface: #fff;
+  --panel: #fffdf8; --hover: #f4f1ea; --track: #e5e1d8; --accent: #1971c2; --quote: #ced4da;
+  --hl: #ffd43b; --hl-ink: #1e1e1e; --hl-seen: #fff3bf; --hl-block: #fff3bf; --hl-block-seen: #fff3bf80;
+  --canvas-filter: none; }
+/* Dark: real colours for the chrome; canvases get Excalidraw's filter, invert(93%) hue-rotate(180deg),
+   plus saturate/brightness so the kit's pastels stay recognisable instead of near-black (canvas pixels
+   stay light). --bg is the kit's paper (#fdfcf9) after the filter, so a canvas blends into the stage. */
+:root[data-theme="dark"] { color-scheme: dark; --ink: #e2e0dc; --muted: #9a968e; --line: #36332e; --bg: #191813;
+  --code: #2a2823; --surface: #24221e; --panel: #1f1d19; --hover: #2e2c27; --track: #3a3731; --accent: #4dabf7;
+  --quote: #4a4741; --hl-seen: #ffd43b2e; --hl-block: #ffd43b26; --hl-block-seen: #ffd43b14;
+  --canvas-filter: invert(93%) hue-rotate(180deg) saturate(1.5) brightness(1.15); }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink);
+  font: 17px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+a { color: var(--accent); }
+h1 { font-size: 2em; line-height: 1.2; margin: 0 0 .3em; }
+h2 { margin-top: 2.2em; padding-top: .6em; border-top: 1px solid var(--line); }
+code { font: .9em ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--code); padding: .1em .3em; border-radius: 4px; }
+pre { background: var(--code); padding: 12px 14px; border-radius: 8px; overflow-x: auto; }
+pre code { background: none; padding: 0; }
+table { border-collapse: collapse; margin: 1em 0; font-size: .95em; }
+th, td { border: 1px solid var(--line); padding: 4px 10px; text-align: left; }
+blockquote { margin: 1em 0; padding: 0 1em; color: var(--muted); border-left: 3px solid var(--line); }
+.deck-canvas { filter: var(--canvas-filter); }
+mark[data-src] { background: none; color: inherit; }
+/* Deck: full-viewport stage + bottom bar + collapsible notes. */
+html, body.layout-deck { height: 100%; margin: 0; overflow: hidden; }
+.deck { display: flex; height: 100vh; }
+.deck-main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.deck-head { display: flex; gap: 14px; align-items: baseline; padding: 10px 20px; border-bottom: 1px solid var(--line); white-space: nowrap; overflow: hidden; }
+.deck-title { font-weight: 600; }
+.deck-sec { color: var(--muted); overflow: hidden; text-overflow: ellipsis; }
+.deck-stage { flex: 1; min-height: 0; position: relative; }
+.deck-stage > * { position: absolute; inset: 0; margin: 0; display: none; }
+.deck-stage > .active { display: flex; align-items: center; justify-content: center; }
+.deck-canvas { display: block; width: 100%; height: 100%; object-fit: contain; }
+.deck-card { overflow: auto; padding: 5vh 7vw; box-sizing: border-box; }
+.deck-stage > .deck-card.active { align-items: safe center; }
+.deck-card-body { max-width: 960px; margin: auto; font-size: clamp(18px, 1.5vw, 24px); }
+.deck-intro .deck-card-body h1 { font-size: clamp(32px, 3.6vw, 60px); }
+.deck-card-body h2 { border-top: 0; margin-top: 0; padding-top: 0; font-size: 1.7em; }
+.deck-bar { display: flex; align-items: center; gap: 10px; padding: 8px 14px; border-top: 1px solid var(--line); }
+.deck-bar button { min-width: 34px; height: 30px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); cursor: pointer; font-size: 16px; }
+.deck-progress { flex: 1; display: flex; gap: 3px; align-items: center; }
+.deck-progress button { flex-basis: 0; min-width: 4px; height: 8px; padding: 0; border: 0; border-radius: 3px; background: var(--track); position: relative; overflow: hidden; }
+.deck-progress button.current { height: 12px; }
+.deck-progress i { position: absolute; inset: 0 auto 0 0; background: var(--accent); transition: width .25s; }
+.deck-count { font: 13px ui-monospace, Menlo, monospace; color: var(--muted); min-width: 5.5em; text-align: center; }
+.deck-hint { font: 12px ui-monospace, Menlo, monospace; color: var(--muted); }
+.deck-notes { width: 30vw; max-width: 520px; min-width: 300px; overflow: auto; border-left: 1px solid var(--line); padding: 18px 22px; box-sizing: border-box; background: var(--panel); font-size: 15px; line-height: 1.55; }
+.deck-notes h2 { margin-top: 0; padding-top: 0; border-top: 0; font-size: 1.35em; }
+.deck-note { display: none; }
+.deck-note.active { display: block; }
+body.notes-hidden .deck-notes, body.on-card .deck-notes { display: none; }
+@media (max-width: 800px) { .deck-hint { display: none; } }
+/* Source passages tied to steps (kit source()): current step strong, earlier steps faint. */
+.deck-note mark[data-src] { background: transparent; color: inherit; border-radius: 3px; transition: background .3s, box-shadow .3s; }
+.deck-note mark[data-src].seen { background: var(--hl-seen); }
+.deck-note mark[data-src].on { background: var(--hl); box-shadow: 0 0 0 3px var(--hl); color: var(--hl-ink); }
+.deck-note mark[data-src].on code { background: #0000001a; }
+.deck-note blockquote { color: var(--ink); border-left-color: var(--quote); margin: .8em 0; }
+.deck-note .src-ref { font-size: .85em; color: var(--muted); margin-bottom: .2em; }
+/* Block passages (code, tables, lists) tied to steps: <div data-src="id"> around them in page.md. */
+.deck-note div[data-src] { border-radius: 6px; transition: background .3s, box-shadow .3s; }
+.deck-note div[data-src].seen { background: var(--hl-block-seen); }
+.deck-note div[data-src].on { background: var(--hl-block); box-shadow: 0 0 0 3px var(--hl); }
+.deck-note pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+/* Section index (i / click on the section name). */
+.deck-main { position: relative; }
+.deck-title, .deck-sec { cursor: pointer; }
+.deck-sec::after { content: ' ▾'; }
+.deck-index { position: absolute; top: 46px; left: 14px; z-index: 10; width: min(620px, 80vw); max-height: 72vh; overflow: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 8px 30px #0003; padding: 6px; }
+.deck-index button { display: flex; gap: 10px; width: 100%; text-align: left; padding: 8px 10px; border: 0; border-radius: 6px; background: none; cursor: pointer; font: inherit; color: var(--ink); }
+.deck-index button:hover { background: var(--hover); }
+.deck-index button.current { background: var(--hl-seen); font-weight: 600; }
+.deck-index .n { color: var(--muted); min-width: 1.6em; text-align: right; }
+/* Stacked layout (phones, portrait tablets): stage on top at 16:9, notes below. */
+@media (max-width: 800px), (orientation: portrait) and (max-width: 1100px) {
+  .deck { flex-direction: column; height: 100dvh; }
+  .deck-main { flex: none; }
+  .deck-stage { flex: none; width: 100%; aspect-ratio: 16 / 9; }
+  body.on-card .deck-main { flex: 1; min-height: 0; }
+  body.on-card .deck-stage { flex: 1; aspect-ratio: auto; min-height: 0; }
+  .deck-notes { flex: 1; min-height: 0; width: auto; max-width: none; min-width: 0; border-left: 0; border-top: 1px solid var(--line); }
+  .deck-head { padding: 8px 12px; font-size: 14px; }
+  .deck-bar { flex-wrap: wrap; row-gap: 6px; padding: 6px 10px; }
+  .deck-progress { order: -1; flex-basis: 100%; }
+  .deck-count { margin: 0 auto; }
+  .deck-next { order: 10; }
+  .deck-hint { display: none; }
+}
+/* Touch: thumb-sized buttons, with ‹ and › at the two ends of the bar. */
+@media (pointer: coarse) {
+  .deck-bar > button { min-width: 48px; height: 44px; font-size: 20px; }
+  .deck-progress button { min-width: 6px; }
+  .deck-prev, .deck-next { min-width: 64px; font-size: 26px; }
+}

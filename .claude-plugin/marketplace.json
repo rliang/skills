@@ -1,0 +1,12 @@
+{
+  "name": "rliang-skills",
+  "description": "Agent skills by rliang.",
+  "owner": {"name": "rliang", "url": "https://github.com/rliang"},
+  "plugins": [
+    {
+      "name": "animated-explainer",
+      "source": "./skills/animated-explainer",
+      "description": "Offline, step-through HTML decks of hand-drawn animations that explain a concept or a document."
+    }
+  ]
+}

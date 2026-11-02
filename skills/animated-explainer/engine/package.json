@@ -1,0 +1,21 @@
+{
+  "name": "animated-explainer-engine",
+  "private": true,
+  "version": "0.0.0",
+  "dependencies": {
+    "@canvas-commons/2d": "^0.4.0",
+    "@canvas-commons/core": "^0.4.0",
+    "@fontsource/patrick-hand": "^5.3.0",
+    "animate-kit": "file:kit",
+    "marked": "^16.4.2"
+  },
+  "devDependencies": {
+    "@canvas-commons/editor": "^0.4.0",
+    "@canvas-commons/vite-plugin": "^0.4.0",
+    "playwright": "^1.64.1",
+    "typescript": "^5.2.2",
+    "vite": "^8.0.0"
+  },
+  "description": "Build engine for the animated-explainer skill (run build.mjs; npm ci happens on first build)",
+  "license": "MIT"
+}
