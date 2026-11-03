@@ -2,6 +2,9 @@
 
 An agent skill that explains a concept, a document (design doc, spec, RFC, PR) or the agent's previous reply as **one offline HTML deck of hand-drawn animations**. The animations are written in code with [Canvas Commons](https://github.com/canvas-commons/canvas-commons) (a TypeScript fork of Motion Canvas) and stay live code in the file, not video. One arrow key, scroll gesture or swipe plays one step. The side panel holds the prose or, for a document, the quoted source with each step's passage highlighted. The file opens from disk or as an email attachment, with no server or network.
 
+<img width="960" height="560" alt="page-bucket" src="https://github.com/user-attachments/assets/6e35d47f-42cc-4635-9ca2-6ccb41619f95" />
+<img width="960" height="560" alt="page-backoff" src="https://github.com/user-attachments/assets/96a38f4a-38cf-4949-83cb-67d28e47dcb0" />
+
 The skill's main lesson is in `SKILL.md` under "Make it intuitive": turn every quantity into something you can count, never change a number without a visible cause, and contrast two rules on the same input.
 
 ## Install
