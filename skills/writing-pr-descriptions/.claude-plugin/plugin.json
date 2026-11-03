@@ -1,0 +1,10 @@
+{
+  "name": "writing-pr-descriptions",
+  "description": "Write PR descriptions for the reviewer: intent, one subsection per behaviour change, breaking changes, and nothing from the session that produced the diff.",
+  "version": "0.1.0",
+  "author": {"name": "rliang", "url": "https://github.com/rliang"},
+  "repository": "https://github.com/rliang/skills",
+  "license": "MIT",
+  "keywords": ["github", "pull-requests", "pr-description", "code-review", "writing"],
+  "skills": ["./"]
+}

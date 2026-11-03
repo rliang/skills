@@ -7,6 +7,16 @@
       "name": "animated-explainer",
       "source": "./skills/animated-explainer",
       "description": "Offline, step-through HTML decks of hand-drawn animations that explain a concept or a document."
+    },
+    {
+      "name": "stacking-prs",
+      "source": "./skills/stacking-prs",
+      "description": "Stacked GitHub PRs with gh stack, shaped for the reviewer: cheap changes first, small PRs, new tests in their own PR."
+    },
+    {
+      "name": "writing-pr-descriptions",
+      "source": "./skills/writing-pr-descriptions",
+      "description": "PR descriptions for the reviewer: intent, one subsection per behaviour change, breaking changes."
     }
   ]
 }

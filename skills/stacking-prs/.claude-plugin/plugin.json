@@ -1,0 +1,10 @@
+{
+  "name": "stacking-prs",
+  "description": "Plan, build, update and merge stacked GitHub pull requests with gh stack, shaped for the reviewer: cheap changes first, small PRs, new tests in their own PR.",
+  "version": "0.1.0",
+  "author": {"name": "rliang", "url": "https://github.com/rliang"},
+  "repository": "https://github.com/rliang/skills",
+  "license": "MIT",
+  "keywords": ["github", "pull-requests", "stacked-prs", "gh-stack", "code-review"],
+  "skills": ["./"]
+}
