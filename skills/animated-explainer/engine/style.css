@@ -95,3 +95,7 @@ body.notes-hidden .deck-notes, body.on-card .deck-notes { display: none; }
   .deck-progress button { min-width: 6px; }
   .deck-prev, .deck-next { min-width: 64px; font-size: 26px; }
 }
+/* GIF export: the label turns into a progress percentage while it runs. */
+.deck-bar .deck-gif { min-width: 4.2em; font: 12px ui-monospace, Menlo, monospace; }
+.deck-bar .deck-gif:disabled { cursor: progress; opacity: .7; }
+.deck-bar button[hidden] { display: none; }

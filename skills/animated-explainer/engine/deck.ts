@@ -4,6 +4,7 @@
 // cards; each section's prose shows in a collapsible notes panel.
 import {Project} from '@canvas-commons/core';
 import {Anim, load} from './core';
+import {exportGif} from './gif';
 import {toggleTheme} from './theme';
 
 type Slide =
@@ -72,6 +73,7 @@ export async function startDeck(entries: [string, Project][]) {
   $<HTMLElement>('.deck-sec').onclick = toggleIndex;
   $<HTMLElement>('.deck-title').onclick = toggleIndex;
 
+  let exporting = false; // a GIF export owns the canvas
   let si = 0; // current slide
   let k = 0; // step resting (or playing toward) within the slide
 
@@ -84,6 +86,7 @@ export async function startDeck(entries: [string, Project][]) {
     });
     const cur = slides[si];
     document.body.classList.toggle('on-card', cur.kind === 'card');
+    gifButton.hidden = cur.kind !== 'anim';
     document.querySelectorAll<HTMLElement>('.deck-note').forEach(n =>
       n.classList.toggle('active', n.dataset.section === cur.section),
     );
@@ -121,6 +124,7 @@ export async function startDeck(entries: [string, Project][]) {
   }
 
   function show(i: number, step: number, play: boolean) {
+    if (exporting) return;
     interrupt();
     si = i;
     k = step;
@@ -137,6 +141,7 @@ export async function startDeck(entries: [string, Project][]) {
   }
 
   function next() {
+    if (exporting) return;
     const s = slides[si];
     if (k < count(s) - 1) {
       interrupt();
@@ -149,6 +154,7 @@ export async function startDeck(entries: [string, Project][]) {
     } else if (si < slides.length - 1) show(si + 1, 0, true);
   }
   function prev() {
+    if (exporting) return;
     const s = slides[si];
     if (k > 0) {
       interrupt();
@@ -161,10 +167,39 @@ export async function startDeck(entries: [string, Project][]) {
     } else if (si > 0) show(si - 1, count(slides[si - 1]) - 1, false);
   }
   function goto(global: number) {
+    if (exporting) return;
     const g = Math.max(1, Math.min(total, global)) - 1;
     const i = offsets.findLastIndex(o => o <= g);
     show(i, g - offsets[i], false);
   }
+
+  // GIF export of the current animation (the button or `g`). Navigation waits
+  // until it's done, then the canvas returns to the step the viewer was on.
+  const gifButton = $<HTMLButtonElement>('.deck-gif');
+  const slug = (s: string) =>
+    s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  function downloadGif() {
+    const s = slides[si];
+    if (s.kind !== 'anim' || exporting) return;
+    exporting = true;
+    gifButton.disabled = true;
+    run(async () => {
+      try {
+        const blob = await exportGif(s.anim, p => (gifButton.textContent = `${Math.round(p * 100)}%`));
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `${[slug($('.deck-title').textContent ?? ''), s.anim.id].filter(Boolean).join('-')}.gif`;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(a.href), 60_000);
+      } finally {
+        await s.anim.seekTo(s.anim.ends[k]);
+        gifButton.textContent = 'GIF';
+        gifButton.disabled = false;
+        exporting = false;
+      }
+    });
+  }
+  gifButton.onclick = downloadGif;
 
   const goNext = next, goPrev = prev;
   const queue = (f: () => unknown) => () => void f();
@@ -194,6 +229,7 @@ export async function startDeck(entries: [string, Project][]) {
     else if (key === 'f') fullscreen();
     else if (key === 't') toggleTheme();
     else if (key === 'i') toggleIndex();
+    else if (key === 'g') downloadGif();
     else if (key === 'Escape' && !index.hidden) index.hidden = true;
     else return;
     e.preventDefault();

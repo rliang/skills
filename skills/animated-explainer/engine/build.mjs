@@ -125,7 +125,8 @@ ${stage.join('\n')}
 <div class="deck-progress"></div>
 <span class="deck-count"></span>
 <button type="button" class="deck-next" aria-label="Next step">›</button>
-<span class="deck-hint">← → · scroll · i · n · t · f</span>
+<span class="deck-hint">← → · scroll · i · n · t · f · g</span>
+<button type="button" class="deck-gif" aria-label="Download this animation as a GIF (g)" title="Download this animation as a GIF (g)">GIF</button>
 <button type="button" class="deck-theme" aria-label="Light or dark theme (t)">◐</button>
 <button type="button" class="deck-notes-toggle" aria-label="Toggle notes (n)">☰</button>
 <button type="button" class="deck-full" aria-label="Fullscreen (f)">⛶</button>
