@@ -210,7 +210,7 @@ async function build(work, opt) {
     if (back.length) console.warn(`warning deck sections out of the source's order: ${back.join(' | ')}`);
   }
 
-  const out = path.resolve(opt.out ?? `${path.basename(work)}.html`);
+  const out = path.resolve(opt.out ?? path.join(os.tmpdir(), 'animated-explainer', `${path.basename(work)}.html`));
   if (fs.existsSync(out) && !opt.replace) die(`${out} exists; pass --replace to overwrite`);
 
   ensureEngine();
@@ -296,6 +296,7 @@ ${body}
 </body>
 </html>
 `;
+  fs.mkdirSync(path.dirname(out), {recursive: true});
   fs.writeFileSync(out, html);
   console.log(`Wrote ${out} (${Math.round(html.length / 1024)} KB, ${ids.length} animation(s)).`);
   if (!opt['no-verify']) await verify(out, ids, path.join(work, '.frames'));

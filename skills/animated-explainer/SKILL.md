@@ -55,14 +55,14 @@ Write labels, captions and prose in the source's language, and pass `--lang` to 
 6. **Build:**
 
    ```bash
-   node SKILL_DIR/engine/build.mjs build <workdir> --out ./<slug>.html [--lang pt-BR] [--replace]
+   node SKILL_DIR/engine/build.mjs build <workdir> --out ${TMPDIR:-/tmp}/animated-explainer/<slug>.html [--lang pt-BR] [--replace]
    ```
 
    It type-checks the scenes, runs the source checks when the work dir has a `source.md`, bundles everything into one HTML, opens it in headless Chromium from `file://`, fails on any page error, and writes one contact sheet per animation to `<workdir>/.frames/<id>.png`: one frame per step at its resting frame (exactly what the deck pauses on), or 8 evenly spaced frames when there are no steps. It also renders each side panel (`panel-<section>.png`) and each text card (`card-<section>.png`). A build that prints the contact sheets is known to load and play.
 
-7. **Look at every contact sheet, panel and card.** This is your only view of the result, so treat it as review, not a formality. Check: text overlapping text or shapes, anything cut off at the edges, labels too small to read, captions out of sync with the motion, an empty or cramped composition, the final frame showing the right numbers, and panel prose that is complete and not cut off. To look closer at one moment, render full-size stills: `node SKILL_DIR/engine/build.mjs frames ./<slug>.html <id> 3.5 7` (it prints where it wrote them). Fix and rebuild with `--replace` until the sheets are clean.
+7. **Look at every contact sheet, panel and card.** This is your only view of the result, so treat it as review, not a formality. Check: text overlapping text or shapes, anything cut off at the edges, labels too small to read, captions out of sync with the motion, an empty or cramped composition, the final frame showing the right numbers, and panel prose that is complete and not cut off. To look closer at one moment, render full-size stills: `node SKILL_DIR/engine/build.mjs frames ${TMPDIR:-/tmp}/animated-explainer/<slug>.html <id> 3.5 7` (it prints where it wrote them). Fix and rebuild with `--replace` until the sheets are clean.
 
-8. **Reply** with a markdown link to the deck (`[<slug>.html](file://<absolute path>)`), one line per animation saying what it shows, anything from step 1 you found inconsistent, and what you skipped or couldn't verify.
+8. **Reply** with a markdown link to the deck (`[<slug>.html](file://<absolute path>)`, the file in the temp dir; don't copy it into the user's project), one line per animation saying what it shows, anything from step 1 you found inconsistent, and what you skipped or couldn't verify.
 
 ## Make it intuitive
 
@@ -134,9 +134,9 @@ The kit also has `jsonCard` (a payload, schema or config drawn as key/value rows
 The deck embeds its sources. To change a deck you built earlier (or one the user sends back):
 
 ```bash
-node SKILL_DIR/engine/build.mjs extract ./<slug>.html <workdir>
+node SKILL_DIR/engine/build.mjs extract ${TMPDIR:-/tmp}/animated-explainer/<slug>.html <workdir>
 # edit page.md or the scenes, then
-node SKILL_DIR/engine/build.mjs build <workdir> --out ./<slug>.html --replace
+node SKILL_DIR/engine/build.mjs build <workdir> --out ${TMPDIR:-/tmp}/animated-explainer/<slug>.html --replace
 ```
 
 Then review the new contact sheets as in step 7 and remind the user to reload.
