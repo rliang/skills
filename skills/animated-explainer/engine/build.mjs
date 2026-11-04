@@ -421,6 +421,43 @@ async function verify(file, ids, framesDir) {
   }
   await browser.close();
   if (errors.length) die(`the page logged errors:\n${errors.join('\n')}`);
+  await verifySandboxed(file);
+}
+
+// Some hosts (agent apps) preview an attached HTML file in a sandboxed srcdoc
+// iframe: opaque origin, no storage, strict CSP. The deck must still play there.
+async function verifySandboxed(file) {
+  const {browser, page, errors} = await openPage(file);
+  await page.close();
+  const p = await browser.newPage({viewport: {width: 1200, height: 900}});
+  const pageErrors = [];
+  p.on('pageerror', e => pageErrors.push(String(e)));
+  await p.setContent('<!doctype html><body style="margin:0">');
+  const csp = ["default-src 'none'", "script-src 'unsafe-inline' 'unsafe-eval' blob:", "style-src 'unsafe-inline'",
+    'img-src data: blob:', 'font-src data:', 'media-src data: blob:', "connect-src 'none'", "form-action 'none'",
+    "base-uri 'none'", "frame-src 'none'", "object-src 'none'"].join('; ');
+  await p.evaluate(([csp, html]) => {
+    const f = document.createElement('iframe');
+    f.setAttribute('sandbox', 'allow-scripts');
+    f.style.cssText = 'width:1200px;height:900px;border:0';
+    f.srcdoc = `<!doctype html><meta http-equiv="Content-Security-Policy" content="${csp}">` + html;
+    document.body.append(f);
+  }, [csp, fs.readFileSync(file, 'utf8')]);
+  const f = await (await p.waitForSelector('iframe')).contentFrame();
+  await f.waitForFunction(() => document.querySelector('.deck-count')?.textContent, null, {timeout: 30000}).catch(() => {});
+  const frame = () => f.evaluate(() => Math.max(0, ...Object.values(window.__animate ?? {}).map(h => h.player.onFrameChanged.current)));
+  const hasAnim = await f.evaluate(() => !!document.querySelector('.deck-stage [data-animation]'));
+  // Step through until an animation is current, then it must advance.
+  let moved = !hasAnim;
+  for (let i = 0; i < 4 && !moved; i++) {
+    await f.evaluate(() => document.body.dispatchEvent(new KeyboardEvent('keydown', {key: 'ArrowRight', bubbles: true})));
+    await p.waitForTimeout(1200);
+    moved = (await frame()) > 0;
+  }
+  await browser.close();
+  if (pageErrors.length) die(`the deck throws in a sandboxed iframe (agent-app HTML preview):\n${pageErrors.join('\n')}`);
+  if (!moved) die('the deck does not animate in a sandboxed iframe (agent-app HTML preview).');
+  console.log('sandboxed-iframe check: ok');
 }
 
 async function frames(file, id, secs) {

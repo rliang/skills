@@ -109,7 +109,11 @@ export async function startDeck(entries: [string, Project][]) {
         first.scrollIntoView({behavior: 'smooth', block: 'center'});
     }
     $('.deck-count').textContent = `${offsets[si] + k + 1} / ${total}`;
-    history.replaceState(null, '', `#${offsets[si] + k + 1}`);
+    // Throws in sandboxed srcdoc iframes (opaque origin, e.g. an agent app's HTML
+    // preview); that must not stop the step from playing.
+    try {
+      history.replaceState(null, '', `#${offsets[si] + k + 1}`);
+    } catch {}
   }
 
   // State (si, k, the counter, highlights) changes the moment a key is pressed;
