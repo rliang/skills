@@ -2,7 +2,6 @@
 name: animated-explainer
 description: Explain a concept, a document (design doc, spec, RFC, PR) or the previous reply as one offline HTML deck of hand-drawn animations written in code with Canvas Commons (a TypeScript fork of Motion Canvas), with prose or the quoted source in a side panel. One arrow key, scroll gesture or swipe plays one animation step. The file opens from disk or as an attachment, with no server or network. Use when the user runs /animated-explainer on a topic, a file, a URL, pasted text, or nothing (the previous reply).
 license: MIT
-disable-model-invocation: true
 ---
 
 # Animated explainer
