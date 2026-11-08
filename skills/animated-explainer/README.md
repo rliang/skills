@@ -24,7 +24,7 @@ claude plugin install animated-explainer@rliang-skills
 
 Or copy this directory into your agent's skills directory (e.g. `~/.claude/skills/animated-explainer`).
 
-**Requirements:** Node.js 20.19 or newer, and npm. The first build runs `npm ci` in `engine/` (about 150 MB) and downloads Playwright's Chromium (shared with any other Playwright install). Later builds take seconds.
+**Requirements:** Node.js 20.19 or newer, and npm. The first build (or `build.mjs setup`, which the skill starts in the background) runs `npm ci` in `engine/` (about 150 MB) and needs a Chromium-based browser for its checks. It uses Playwright's Chromium when installed, then an installed Google Chrome or Microsoft Edge, and otherwise downloads Playwright's headless shell once (about 200 MB, shared with any other Playwright install). Set `ANIMATE_BROWSER` to a channel (`chrome`, `msedge`) or an executable path to choose one. Later builds take a few seconds.
 
 ## Use
 
@@ -41,7 +41,7 @@ To put one animation in a wiki page, a ticket or a chat, press the deck's GIF bu
 
 ## How it works
 
-- `engine/build.mjs` type-checks the scenes, runs Vite with the Canvas Commons plugin, swaps its per-project entries for one page entry, and inlines the single JS bundle and CSS (font included) into the HTML. A deck is about 2.7 MB, mostly the 2D library. It then opens the file in headless Chromium from `file://`, fails on any page error, checks that the deck still plays when previewed in a sandboxed `srcdoc` iframe (as some agent apps do for attached HTML: opaque origin, strict CSP), and writes contact sheets (one frame per step), side-panel and text-card renders for the agent to review.
+- `engine/build.mjs` type-checks the scenes, runs Vite with the Canvas Commons plugin, swaps its per-project entries for one page entry, and inlines the single JS bundle and CSS (font included) into the HTML. A deck is about 2.7 MB, mostly the 2D library. It then opens the file in headless Chromium from `file://`, fails on any page error, checks that the deck still plays when previewed in a sandboxed `srcdoc` iframe (as some agent apps do for attached HTML: opaque origin, strict CSP), and writes contact sheets (one frame per step), side-panel and text-card renders for the agent to review. Sheets and renders whose inputs didn't change are kept and marked unchanged, so the agent doesn't review them twice. `--only <id>` builds one animation into a preview, so subagents can write a deck's animations in parallel in one work dir.
 - `engine/core.ts` loads each animation with Canvas Commons' `Player` and `Stage` and exposes its steps, `playTo` and `seekTo`. It replaces `<canvas-commons-player>`, which loads its project by URL (blocked from `file://`) and has no step control. Step marks are frames the kit records on each scene during the player's first pass. This was verified with one scene per project; with several scenes per project, check the step counter.
 - `engine/deck.ts` drives the deck: navigation, wheel debouncing so one trackpad gesture is one step, touch, keys, the URL hash and source highlights. `engine/gif.ts` exports one animation as a GIF with [gifenc](https://github.com/mattdesl/gifenc), frame by frame through the same seeks the steps use, with one palette and repeated frames merged. `engine/theme.ts` handles light and dark (canvases get an Excalidraw-style invert filter).
 - `engine/kit` is the house kit scenes import as `animate-kit`: palette, captions that mark steps, tokens, bars, legends, timelines, JSON cards, chips, tables, locale-aware numbers.

@@ -10,7 +10,9 @@ An explainer is prose with animations where motion carries the idea: a number th
 
 **The deck.** A full-screen stage: → / ↓ / space / one scroll gesture / a swipe plays the next step and pauses at its end (pressing during a step completes it and moves on, so one press is always one step), and ← jumps back a step. Each `##` section becomes its animations in order, or a text card when it has none; the intro before the first `##` is the title card; each section's prose sits in a side panel (below the stage on phones and portrait screens; scrolling it never changes slides; `n` toggles it, `f` goes full screen, `i` or a click on the section name opens an index of sections to jump to, the URL hash `#12` opens step 12). The GIF button or `g` downloads the current animation as a looping GIF (for Confluence, Jira, Slack or email, where the deck can't be embedded). The deck follows the system's light or dark theme; `t` or the ◐ button switches it, and the choice is remembered.
 
-`SKILL_DIR` is this skill's base directory. The engine (Canvas Commons, Vite, Playwright, the house kit) lives in `SKILL_DIR/engine`; the first build installs its dependencies and Playwright's Chromium (about 150 MB plus a browser download, once). Don't scaffold a project or run `npm create`.
+`SKILL_DIR` is this skill's base directory. The engine (Canvas Commons, Vite, Playwright, the house kit) lives in `SKILL_DIR/engine`. Don't scaffold a project or run `npm create`.
+
+**First, before anything else:** start `node SKILL_DIR/engine/build.mjs setup` in the background (don't wait for it) and go on with step 1. On a first run it installs the engine (about 150 MB) and finds a browser: an installed Google Chrome or Microsoft Edge, or else it downloads Playwright's headless Chromium once. Later it returns in a second. A build started while it is still installing waits for it.
 
 ## What the request asks for
 
@@ -50,6 +52,7 @@ Write labels, captions and prose in the source's language, and pass `--lang` to 
    - **animations/<id>.ts:** `import main from './<id>/main?scene'; export default makeProject({scenes: [main]});`. The `?scene` suffix is required. Scene file basenames must be unique across the deck.
    - **Scenes** use the house kit (below), `references/visual-toolbox.md` for verified visual recipes, and the API in `references/canvas-commons.md`. Read both references before writing your first scene (in `canvas-commons.md`, at least §1–§6 and §8).
    - **Shared helpers** (a formatter, a reusable sub-scene) go in `animations/lib/*.ts(x)`; a `.ts` directly under `animations/` is taken for a project file.
+   - **Three or more animations and a tool that starts subagents:** don't write the scenes one after another. Write `page.md` yourself, then hand the scenes out as in "Writing scenes in parallel" below, and go on to step 6 when every subagent is back.
 
 6. **Build:**
 
@@ -59,9 +62,24 @@ Write labels, captions and prose in the source's language, and pass `--lang` to 
 
    It type-checks the scenes, runs the source checks when the work dir has a `source.md`, bundles everything into one HTML, opens it in headless Chromium from `file://`, fails on any page error, and writes one contact sheet per animation to `<workdir>/.frames/<id>.png`: one frame per step at its resting frame (exactly what the deck pauses on), or 8 evenly spaced frames when there are no steps. It also renders each side panel (`panel-<section>.png`) and each text card (`card-<section>.png`). A build that prints the contact sheets is known to load and play.
 
-7. **Look at every contact sheet, panel and card.** This is your only view of the result, so treat it as review, not a formality. Check: text overlapping text or shapes, anything cut off at the edges, labels too small to read, captions out of sync with the motion, an empty or cramped composition, the final frame showing the right numbers, and panel prose that is complete and not cut off. To look closer at one moment, render full-size stills: `node SKILL_DIR/engine/build.mjs frames ${TMPDIR:-/tmp}/animated-explainer/<slug>.html <id> 3.5 7` (it prints where it wrote them). Fix and rebuild with `--replace` until the sheets are clean.
+   A failing build lists every problem it found (type errors, source ids, coverage) at once, so fix them all before rebuilding. To work on one animation, `--only <id>` (comma-separated for several) builds just that one into `<workdir>/.preview/<id>.html` and writes its contact sheet, in a couple of seconds, ignoring the other animations' files and the deck-wide checks; finish with a full build.
+
+7. **Look at every contact sheet, panel and card.** This is your only view of the result, so treat it as review, not a formality. Check: text overlapping text or shapes, anything cut off at the edges, labels too small to read, captions out of sync with the motion, an empty or cramped composition, the final frame showing the right numbers, and panel prose that is complete and not cut off. To look closer at one moment, render full-size stills: `node SKILL_DIR/engine/build.mjs frames ${TMPDIR:-/tmp}/animated-explainer/<slug>.html <id> 3.5 7` (it prints where it wrote them). Fix with targeted edits to the lines at fault rather than rewriting whole scene files, and rebuild with `--replace` until the sheets are clean. A sheet or render the build marks `(unchanged since the last build)` is the same image you already reviewed: don't open it again.
 
 8. **Reply** with a markdown link to the deck (`[<slug>.html](file://<absolute path>)`, the file in the temp dir; don't copy it into the user's project), one line per animation saying what it shows, anything from step 1 you found inconsistent, and what you skipped or couldn't verify.
+
+## Writing scenes in parallel
+
+Writing the scenes is most of a run's time, and each animation is independent once `page.md` and its storyboard are settled, so one subagent per animation, all started at once, finishes in about the time of the slowest one.
+
+1. Put anything two animations share in `animations/lib/` now, before anyone starts.
+2. Write each animation's storyboard to `<workdir>/storyboards/<id>.md`: the picture you picked in step 3 and why, every fact and number it shows (with where it came from), the layout, and each step's caption and visible change. This file is the subagent's whole picture of the topic, so put everything it needs in it.
+3. Start one subagent per animation in a single batch. Give each: `SKILL_DIR`, the work dir, its animation id, the `--lang` if any, and these instructions:
+   - It owns only `animations/<id>.ts` and `animations/<id>/`. It must not edit `page.md`, `animations/lib/` or another animation's files; if the storyboard can't work as written, it says so in its reply instead.
+   - Read step 7 of `SKILL_DIR/SKILL.md` and everything from "Make it intuitive" to the end, `references/visual-toolbox.md`, and `references/canvas-commons.md` (at least §1–§6 and §8). Then write the scene from `storyboards/<id>.md`.
+   - Build it with `node SKILL_DIR/engine/build.mjs build <workdir> --only <id> [--lang …]` and review its contact sheet as in step 7 until it's clean.
+   - Reply with the step count, anything it changed from the storyboard and why, and anything it couldn't make work.
+4. When all are back, run the full build (step 6) and review (step 7). Every sheet is new to you, so look at each once, and also check the animations against each other: one meaning per colour across the deck, and the same quantity drawn at the same scale.
 
 ## Make it intuitive
 
@@ -125,6 +143,7 @@ The kit also has `jsonCard` (a payload, schema or config drawn as key/value rows
 - **Drawing order is insertion order:** a node added later draws on top. Add containers before the things that move into them, or call `node.moveToTop()` on the mover.
 - **Colour held in a plain signal doesn't blend:** tween a node's `fill`/`stroke` directly (`rect().fill(C.red, 0.4)`), or create the signal with `Color.lerp` as its interpolation.
 - **Rough shapes:** a rough Line ignores `end`/`start` (the full line shows from the first frame and only the arrowhead travels), so leave `rough` off a Line that draws on. Dashed outlines don't render on rough shapes, so leave `rough` off a shape that needs `lineDash`. Rough fills are see-through hachure, so use `roughFillStyle={'solid'}` where shapes overlap or colour carries meaning. A rough Rect with zero width still draws a stray line; hide it with opacity instead.
+- **A scene that never ends** (a `while` with no exit, a `loop()` without a count) stalls loading. The build gives up after 30 s and names the animation.
 - **Mid-motion glitches don't show on contact sheets,** which capture each step's end. When a step tweens several bound values at once (a formula over a growing denominator), render a still mid-step with `frames`.
 - The build leaves `.meta` files next to the scenes; that's expected.
 
