@@ -11,7 +11,7 @@ Write each diagram as a JS function against `scripts/lib.mjs` and pipe it to `sc
 
 ## Workflow
 
-1. **Find the vault.** Use `$OBSIDIAN_VAULT` if set, else ask the user for the vault root (the folder that contains `.obsidian`). Registered vaults are listed in `~/Library/Application Support/obsidian/obsidian.json` on macOS; offer those as choices instead of guessing. Ask which subfolder to use if the vault has a convention for drawings; default to the vault root.
+1. **Find the vault.** Use `$OBSIDIAN_VAULT` if set, else ask the user for the vault root (the folder that contains `.obsidian`). With the Obsidian CLI, `obsidian vaults verbose` lists registered vaults and their paths; without it, read `~/Library/Application Support/obsidian/obsidian.json` on macOS. Offer those as choices instead of guessing. Ask which subfolder to use if the vault has a convention for drawings; default to the vault root.
 2. **Plan before drawing.** Decide what one idea each diagram explains and what it contains. Every number, name and rule must come from the source (doc, code, vendor docs); when drawing exposes an inconsistency in the source, draw what is correct and tell the user.
 3. **Build and write** with a heredoc. `Scene`, `C`, `FS`, `FONT` are in scope; one exported function per diagram, each returning a `Scene`. The export name becomes the file name (`s1` -> `s1.excalidraw.md`), so use descriptive names (`order_flow`).
    ```bash
@@ -28,7 +28,8 @@ Write each diagram as a JS function against `scripts/lib.mjs` and pipe it to `sc
    ```
    Output per diagram: `name  N elements  <path>  <obsidian:// uri>`. `--open` asks Obsidian to open the file (the vault must be registered in Obsidian). `--check` lints only.
 4. **Fix lint issues and re-run.** If any scene has issues nothing is written. Fix every `text over text`, `text over box` and `box over box`. `box grew` means a label didn't fit the size you asked for: shorten or split the text, or widen the slot (`--force` is fine for proportional bars where the label is meant to sit outside).
-5. **Report** the file paths and say the rendering wasn't previewed if it wasn't.
+5. **Preview if you can.** If the plugin CLI is available (see below), export each drawing to a PNG and look at it; the lint can't catch bad composition, crossing arrows or a lopsided layout. Fix what you see and re-run.
+6. **Report** the file paths, and say the rendering wasn't previewed if it wasn't.
 
 Re-running a function overwrites its file. If the user edited the drawing in Obsidian, don't overwrite it: pick a new name, or read the file and modify it.
 
@@ -38,7 +39,21 @@ Re-running a function overwrites its file. If the user edited the drawing in Obs
 - **File format.** `lib.mjs` writes the plugin's markdown format: frontmatter `excalidraw-plugin: parsed`, a `## Text Elements` list mirroring the scene's text, and the scene JSON uncompressed inside a `%%` comment. The plugin recompresses on its next save. Never hand-edit a drawing the plugin has compressed; regenerate it instead.
 - **Embedding.** To show a drawing inside a note, link `![[name.excalidraw]]` (with an optional `|width`). Writing into an existing note is the user's call; ask first.
 - **Vault sync.** A vault in iCloud, Obsidian Sync or git syncs the new file like any other note. Don't write outside the vault.
-- **Obsidian MCP.** If an Obsidian MCP server (the Local REST API plugin's built-in one) is available, it can open or list files, but this skill writes the file directly and doesn't need it.
+- **Obsidian MCP.** If an Obsidian MCP server is available it can open or list files, but this skill writes the file directly and doesn't need it. Prefer the CLI below.
+
+## Obsidian CLI (optional)
+
+Obsidian 1.12+ ships a CLI (`obsidian`) that talks to the running app, and the Excalidraw plugin registers its own commands on it. Neither is needed to write a drawing; use them to preview and to edit drawings the user has already changed. Check with `obsidian vault=<name> obsidian-excalidraw-plugin:status` (`"ready":true`); if the command is missing or Obsidian isn't running, fall back to lint only. Always pass `vault=<name>` first, and use vault-relative paths with the extension.
+
+- **Preview.** Every write command needs a unique `requestId`. Exporting writes the image into the vault, so send it to a scratch name and delete it afterwards:
+  ```bash
+  obsidian vault=NAME obsidian-excalidraw-plugin:export requestId=prev1 \
+    path="Diagrams/order_flow.excalidraw.md" out="Diagrams/order_flow.preview.png" overwrite
+  ```
+  Look at the PNG (or hand it to a subagent), then `rm` it. Obsidian indexes a freshly written file after a few seconds; if the export says `NOT_FOUND`, wait and retry. `theme=dark`, `scale=` and `area=` are available.
+- **Editing an existing drawing.** Instead of regenerating a drawing the user has edited, `:read source=live detail=elements`, then `:apply` with `expectedRevision` and a new `requestId` (operations: add, update, delete, connect, group, lucide icons, and more). After a `STALE_REVISION`, read again. Check `ok` and `persistence":"saved"` in the JSON result; exit code zero isn't enough.
+- **Discovery.** `:list` shows the vault's drawings, `:icons query=` the installed Lucide icons, `:schema action=<cmd>` the exact request fields, and `:skill format=markdown` the plugin's own usage notes.
+- Don't use `:create` for new diagrams: it takes raw Excalidraw skeletons and has none of the layout lint or the lane, grid and zone helpers.
 
 ## Scene API (`scripts/lib.mjs`)
 
