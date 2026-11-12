@@ -5,8 +5,6 @@ Agent skills by [rliang](https://github.com/rliang), each in `skills/<name>/` fo
 | Skill | What it does |
 |---|---|
 | [animated-explainer](skills/animated-explainer) | Explains a concept, a document or the previous reply as one offline HTML deck of hand-drawn, step-through animations written in code with Canvas Commons. |
-| [excalidraw](skills/excalidraw) | Draws diagrams (architecture, flows, sequences, tables) as Excalidraw scenes written in code, lints the layout since there is no preview, and returns shareable `#json=` links or local `.excalidraw` files. |
-| [excalidraw-obsidian](skills/excalidraw-obsidian) | Same scene API and layout lint as `excalidraw`, but saves the diagrams as `.excalidraw.md` drawings in an Obsidian vault for the Excalidraw plugin, with arrows bound to shapes. |
 | [stacking-prs](skills/stacking-prs) | Plans, builds, updates and merges stacked GitHub PRs with `gh stack`, ordered and sized for the reviewer, with new tests in their own PR. |
 | [writing-pr-descriptions](skills/writing-pr-descriptions) | Writes PR descriptions for the reviewer: intent, one subsection per behaviour change, breaking changes, and nothing from the session that produced the diff. |
 

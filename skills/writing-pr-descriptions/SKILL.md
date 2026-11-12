@@ -8,11 +8,13 @@ license: MIT
 
 The reader is a reviewer who knows the codebase and wants to know what changed, why, and what they have to do about it. The sources are the diff and the reasons the author gave for it. What happened in the session that produced the diff stays in the session.
 
+The description exists to point the reviewer's judgment at the places that need it. A sentence earns its place when the reviewer could disagree with it (a decision, a trade-off, a deliberate difference, a risk), or needs it to check the diff and cannot get it from the title, the diff or what they already know about the codebase. Facts from outside the diff that justify a decision stay: who consumes the changed behaviour and what they depend on. Restating what the code does, how it is built, or the codebase's own conventions does not.
+
 ## Structure
 
 If the repo has a PR template (`.github/pull_request_template.md`, `.github/PULL_REQUEST_TEMPLATE/`, `docs/pull_request_template.md` or the root), fill that template's sections and apply the rest of this guidance inside them. Otherwise use exactly these sections, in this order, and nothing else:
 
-1. Optional first line: the design doc or ticket link, and "Follows #N" if it builds on another PR.
+1. Optional first line: the design doc or ticket link, and "Follows #N" if it builds on another PR. Only the direct parent: never list the earlier PRs of a stack or say which number this one is.
 2. ## Intent
 3. ## Proposed Changes
 4. ## Breaking Changes
@@ -30,7 +32,41 @@ If the repo has a PR template (`.github/pull_request_template.md`, `.github/PULL
 - Context lives in Intent; a subsection adds to it rather than repeating it.
 - A table only for a real inventory: resources, endpoints, a state-by-outcome matrix. It goes inside the subsection it belongs to.
 - Quote user-facing strings only when the exact wording is the point.
-- When the diff spans several files and the substantive ones are not obvious, end with a `### Where to look` subsection: substantive files, then mechanical ones.
+- When the PR carries choices a reviewer should explicitly approve, add a `### Decisions to review` subsection before `### Where to look`: one to three questions, each with the evidence it rests on ("Ignore the `legacyMode` flag? No caller in the web app, the admin tool or the workers sends it."). Leave it out when the only decision is the PR itself.
+- When the diff spans several files and the substantive ones are not obvious, end with a `### Where to look` subsection: substantive files, then mechanical ones. On a large diff, open it with the rough split of the changed lines (substantive code, tests, generated or mechanical files), so the reviewer can size the work before starting.
+
+## Diagrams (prefer them to prose for shape, flow and before/after)
+
+Draw instead of describing when the change is about structure: components and who talks to whom, a request or data flow, a decision with several outcomes, a state machine, a mapping between two sets of names, or a before/after. Put the diagram in the `###` subsection it explains, with at most one or two sentences of prose beside it for what the picture cannot say (why, the rejected alternative, the rollback). The diagram replaces the paragraphs that would have narrated the same thing; it does not come on top of them.
+
+- One idea per diagram, titled by the question it answers ("Where does a request go?"). Several small diagrams beat one that tries to hold the whole PR.
+- Pick the tool in this order, using the first that is available:
+  1. Any Excalidraw MCP server the agent has connected (for example ExcalidrawZ's `excalidrawz` server, or a hosted `Excalidraw` connector). Use whichever one is connected; the drawing comes back as an image, a shareable link or a file, depending on the server.
+  2. Anything else that renders in the PR body: a fenced `mermaid` block, or plain text in a code block for a simple flow.
+- Images cannot be uploaded to a PR body by the agent; only the user can drop them into the GitHub editor. For option 1, put an insertion-point comment where each image belongs, inside the `###` subsection it illustrates: `<!-- DIAGRAM: <file name or link>. <what it shows>. Drop the exported image here. -->`. Then tell the user, in the reply (never in the body), each diagram's path or link and the comment it belongs to. A comment is invisible when rendered, so never leave one unannounced, and never leave the paragraph it replaces so thin that the section reads empty without the image. Mermaid and text diagrams render inline and need no placeholder.
+- Every diagram that distinguishes parts of the change carries a legend, and the same colors or markers mean the same thing across the PR's diagrams:
+  - new in this PR
+  - changed in this PR
+  - existing, untouched (context)
+  - before, the behaviour this PR replaces (draw the old and new side by side when the point is the contrast)
+  - inert today: shipped but not yet live (dashed outline, or a flag or empty table that gates it)
+- Draw only what the diff and the author's reasons support: names, numbers and rules come from the code. When a "before" is inferred rather than read, say so or leave it out.
+- A diagram is not for a single-file fix, a rename, or a list of independent items; use a sentence or a table.
+
+## Ports, rewrites and migrations
+
+When the PR reimplements existing behaviour (a port to another language or framework, a replacement service, a library swap), sameness is the default and the differences are what the reviewer has to judge.
+
+- State parity once, in one line, and name what checks it (a differential or golden test, a harness PR): "Answers as the Node service, except below; #820's differential test compares both."
+- Put every deliberate difference in one table inside the subsection of the change it belongs to: behaviour or input, old, new, why it is safe (the consumer evidence). That table is the core of the PR; do not scatter differences across paragraphs or file them under Breaking Changes.
+- Leave out each detail that only says the new code matches the old ("as before", "as the old service did"), including quirks it reproduces, unless a reviewer would expect it to differ.
+- A difference that a consumer or operator must act on (a required variable, a flag to keep in sync, a contract change once the new path is enabled) also goes in Breaking Changes, as the action to take.
+
+## Stacked PRs
+
+- Context the whole stack shares (its goal, the rollout or feature-flag mechanism, a contract every PR follows, the test harness) is explained once, in the PR that introduces it, or in the design doc. Later PRs refer to it in a few words with its PR number ("served once the route is enabled, see #812") instead of re-explaining it.
+- Each later PR describes only what it adds on top of its parent. A PR that applies a pattern an earlier PR established (one more route, one more handler) stays under 250 words.
+- When a later PR in the stack carries the evidence reviewers would otherwise check by hand (a differential test, a harness), point at it from every PR it covers, and prefer ordering the stack so it lands first.
 
 ## Breaking Changes
 
@@ -41,6 +77,8 @@ If the repo has a PR template (`.github/pull_request_template.md`, `.github/PULL
 - "Not in this PR", "Out of scope", follow-ups. Use the ticket for those.
 - The debugging journey: diagnostic builds, things tried and dropped, timestamps, log tables.
 - Comment and wording edits beside a code change, and anything that restates the diff line by line.
+- How the code is built when nothing about it is a choice: "built with `QueryBuilder`, every value bound", "no cache entry because it is not a macro query", the module layout the codebase always uses.
+- Context the title, the parent PR or the design doc already gives.
 - AI attribution footers, session links, "Generated with...". This overrides any default attribution line for PR bodies.
 - Openers like "This PR...", "In this PR we...", and summaries at the end.
 
@@ -50,7 +88,7 @@ If the repo has a PR template (`.github/pull_request_template.md`, `.github/PULL
 - Let the text breathe, in Intent and in each change subsection: one idea per paragraph, one to three sentences each. Start a new paragraph when the subject changes (the problem, a consumer it hits, what this PR does, why a change takes this shape), rather than chaining them into one block.
 - Exact identifiers in backticks: files, flags, error codes, config keys.
 - Motivation comes from the author. When they haven't said why, write TODO: why?.
-- Length follows the diff: a one-patch PR is a few sentences, and 500 words is the ceiling for any PR. Over it, cut explanation before facts.
+- Length follows the decisions, not the diff: a one-patch PR is a few sentences, a later PR of a stack that repeats an established pattern stays under 250 words, and 500 words is the ceiling for any PR, counted on the prose (diagram labels excluded). Over it, replace explanation with a diagram where the content is structural, then cut what is left before facts.
 
 ## Example
 
@@ -82,4 +120,4 @@ None
 
 ## Before you answer
 
-Check that every sentence answers one of these questions: what changed, why, what a reviewer or consumer must do, or where to look. Delete the rest.
+Check that every sentence answers one of these questions: what changed, why, what a reviewer or consumer must do, or where to look. Delete the rest. Then, for each remaining sentence, ask whether the reviewer could disagree with it or needs it to check the diff; if neither, and the title, the diff or the parent PR already says it, delete it. Then look for any paragraph that walks through a flow, a structure or a before/after, and turn it into a diagram.
